@@ -1,7 +1,6 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
-#include <random>
 
 struct Room {
     int capacity_;
@@ -150,11 +149,29 @@ int main() {
     std::cout << gentlemen_count << '\n';
 
     std::thread **threads = new std::thread *[ladies_count + gentlemen_count];
-    for (int i = 0; i < gentlemen_count; ++i) {
-        threads[i] = new std::thread(gentlemanMethod);
-    }
-    for (int i = gentlemen_count; i < ladies_count + gentlemen_count; ++i) {
-        threads[i] = new std::thread(ladyMethod);
+
+    int ladies_ready_count = 0;
+    int gentleman_ready_count = 0;
+    for (int i = 0; i < ladies_count + gentlemen_count; ++i) {
+        if (ladies_ready_count != ladies_count && gentleman_ready_count != gentlemen_count) {
+            bool isLady = rand() % 2 == 0;
+            if (isLady){
+                threads[i] = new std::thread(ladyMethod);
+                ++ladies_ready_count;
+            }
+            else{
+                threads[i] = new std::thread(gentlemanMethod);
+                ++gentleman_ready_count;
+            }
+             continue;
+        }
+        if (ladies_ready_count == ladies_count) {
+            threads[i] = new std::thread(gentlemanMethod);
+            continue;
+        }
+        if (gentleman_ready_count == gentlemen_count) {
+            threads[i] = new std::thread(ladyMethod);
+        }
     }
 
     for (int i = 0; i < ladies_count + gentlemen_count; ++i) {
